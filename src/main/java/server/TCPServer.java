@@ -5,7 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-import main.java.datagram.FormatterDatagramPacket;
+import main.java.packet.*;
 
 public class TCPServer {
     private DatagramSocket socket;
@@ -22,15 +22,22 @@ public class TCPServer {
     public DatagramSocket getSocket() {
         return socket;
     }
+
     public void start() {
         while (true) {
             try {
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                FormatterDatagramPacket pacote = new FormatterDatagramPacket(packet);
+                PacketReceiver pacote = new PacketReceiver(packet);
                 String payload = new String(pacote.getPayload());
                 System.out.println("Mensagem recebida: " + payload);
+                if (pacote.validateChecksum()) {
+                    System.out.println("Checksum válido");
+                } else {
+                    System.out.println("Checksum inválido");
+                }
+                // pacote.printDataHexadecimal();
                 if (payload.equals("sair")) {
                     break;
                 }
@@ -45,7 +52,6 @@ public class TCPServer {
 
     public static void main(String[] args) {
         TCPServer server = new TCPServer(12345);
-        DatagramSocket socket = server.getSocket();
         server.start();
 
     }

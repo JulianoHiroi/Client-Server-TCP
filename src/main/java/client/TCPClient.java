@@ -5,10 +5,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.text.Normalizer.Form;
 import java.util.Scanner;
 
-import main.java.datagram.FormatterDatagramPacket;
+import main.java.packet.*;
 
 public class TCPClient {
 
@@ -34,9 +33,9 @@ public class TCPClient {
         try {
             String message = "Olá eu sou Juliano";
             byte[] data = message.getBytes();
-           
-            // Imprimi os dados em hexadecimal 
-            FormatterDatagramPacket packet = new FormatterDatagramPacket(data, 0, 0, 0);
+
+            // Imprimi os dados em hexadecimal
+            PacketTransmitter packet = new PacketTransmitter(data, 0, 0, 0);
             packet.buildPacket();
             DatagramPacket datagramPacket = packet.getPacket();
             datagramPacket.setAddress(serverAddress);
@@ -46,20 +45,20 @@ public class TCPClient {
             e.printStackTrace();
         }
     }
+
     public void sendMessage(String message) {
         try {
-            byte[] data = message.getBytes();
-            FormatterDatagramPacket packet = new FormatterDatagramPacket(data, 0, 0, 0);
-            packet.buildPacket();
+            byte[] payload = message.getBytes();
+            PacketTransmitter packet = new PacketTransmitter(payload, 0, 0, 0);
             DatagramPacket datagramPacket = packet.getPacket();
+            // packet.printDataHexadecimal();
             datagramPacket.setAddress(serverAddress);
             datagramPacket.setPort(serverPort);
             socket.send(datagramPacket);
         } catch (IOException e) {
             e.printStackTrace();
-        }   
+        }
     }
-
 
     public void closeSocket() {
         if (socket != null) {
@@ -71,7 +70,7 @@ public class TCPClient {
         TCPClient client = new TCPClient("localhost", 12345);
         Scanner input = new Scanner(System.in);
         client.handShake();
-        while(true) {
+        while (true) {
             System.out.println("Digite uma mensagem para enviar ao servidor: ");
             String message = input.nextLine();
             client.sendMessage(message);
@@ -79,6 +78,7 @@ public class TCPClient {
                 break;
             }
         }
+        input.close();
         client.closeSocket();
 
     }
