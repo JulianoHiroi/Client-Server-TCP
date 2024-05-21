@@ -5,6 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
+import main.java.datagram.FormatterDatagramPacket;
+
 public class TCPServer {
     private DatagramSocket socket;
 
@@ -20,21 +22,16 @@ public class TCPServer {
     public DatagramSocket getSocket() {
         return socket;
     }
-
-    public static void main(String[] args) {
-        TCPServer server = new TCPServer(12345);
-        DatagramSocket socket = server.getSocket();
-        socket.connect(socket.getInetAddress(), 12345);
+    public void start() {
         while (true) {
             try {
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                System.out.println(" sada " + packet.getData());
-                System.out.println(packet.getAddress().getHostAddress() + " enviou uma mensagem...");
-                String mensagemRecebida = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Mensagem recebida: " + mensagemRecebida);
-                if (mensagemRecebida.equals("sair")) {
+                FormatterDatagramPacket pacote = new FormatterDatagramPacket(packet);
+                String payload = new String(pacote.getPayload());
+                System.out.println("Mensagem recebida: " + payload);
+                if (payload.equals("sair")) {
                     break;
                 }
             } catch (IOException e) {
@@ -44,6 +41,12 @@ public class TCPServer {
         if (socket != null) {
             socket.close();
         }
+    }
+
+    public static void main(String[] args) {
+        TCPServer server = new TCPServer(12345);
+        DatagramSocket socket = server.getSocket();
+        server.start();
 
     }
 

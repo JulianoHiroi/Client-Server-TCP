@@ -1,0 +1,5 @@
+ 4 bytes : SequenceNumber;
+ 4 bytes : ACK
+ 2 bytes : rcvWindow; // Numero de bytes disponivceis no buffer  
+ 2 bytes : checksum; 
+
