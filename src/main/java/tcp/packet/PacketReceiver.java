@@ -60,19 +60,19 @@ public class PacketReceiver {
         System.out.println();
     }
 
-    public int getChecksumFromPacket() {
+    public int getChecksum() {
         return this.checksum;
     }
 
-    public int getAckFromPacket() {
+    public int getAck() {
         return this.ack;
     }
 
-    public int getRcvWindowFromPacket() {
+    public int getRcvWindow() {
         return this.rcvWindow;
     }
 
-    public int getSeqNumberFromPacket() {
+    public int getSeqNumber() {
         return this.seqNumber;
     }
 
