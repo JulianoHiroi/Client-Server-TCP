@@ -1,4 +1,4 @@
-package main.java.security;
+package tcp.security;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

@@ -1,4 +1,4 @@
-package main.java.client;
+package tcp.client;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Scanner;
 
-import main.java.packet.*;
+import tcp.packet.*;
 
 public class TCPClient {
 

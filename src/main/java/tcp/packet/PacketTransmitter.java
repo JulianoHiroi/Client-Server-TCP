@@ -1,8 +1,8 @@
-package main.java.packet;
+package tcp.packet;
 
 import java.net.DatagramPacket;
 
-import main.java.security.MD5Encryption;
+import tcp.security.MD5Encryption;
 
 public class PacketTransmitter {
 

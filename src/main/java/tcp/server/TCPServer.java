@@ -1,11 +1,11 @@
-package main.java.server;
+package tcp.server;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-import main.java.packet.*;
+import tcp.packet.*;
 
 public class TCPServer {
     private DatagramSocket socket;

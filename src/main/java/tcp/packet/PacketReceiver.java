@@ -1,7 +1,7 @@
-package main.java.packet;
+package tcp.packet;
 
 import java.net.DatagramPacket;
-import main.java.security.*;
+import tcp.security.*;
 
 public class PacketReceiver {
     private byte[] data;
