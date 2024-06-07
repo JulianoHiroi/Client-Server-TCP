@@ -1,5 +1,6 @@
 package tcp.client;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -20,6 +21,7 @@ public class TCPClient {
             this.serverAddress = InetAddress.getByName(serverAddress);
             this.serverPort = serverPort;
             this.socket = new DatagramSocket();
+            socket.connect(this.serverAddress, this.serverPort);
             System.out.println("Cliente UDP iniciado...");
         } catch (SocketException e) {
 
@@ -29,15 +31,13 @@ public class TCPClient {
         }
     }
 
-    public void handShake() {
+    public void sendMessage(String message) {
         try {
-            String message = "Olá eu sou Juliano";
-            byte[] data = message.getBytes();
-
-            // Imprimi os dados em hexadecimal
-            PacketTransmitter packet = new PacketTransmitter(data, 0, 0, 0);
-            packet.buildPacket();
+            byte[] payload = message.getBytes();
+            PacketTransmitter packet = new PacketTransmitter(payload, 0, 0, 0);
             DatagramPacket datagramPacket = packet.getPacket();
+
+            // packet.printDataHexadecimal();
             datagramPacket.setAddress(serverAddress);
             datagramPacket.setPort(serverPort);
             socket.send(datagramPacket);
@@ -46,15 +46,21 @@ public class TCPClient {
         }
     }
 
-    public void sendMessage(String message) {
+    public void receiveFile() {
         try {
-            byte[] payload = message.getBytes();
-            PacketTransmitter packet = new PacketTransmitter(payload, 0, 0, 0);
-            DatagramPacket datagramPacket = packet.getPacket();
-            // packet.printDataHexadecimal();
-            datagramPacket.setAddress(serverAddress);
-            datagramPacket.setPort(serverPort);
-            socket.send(datagramPacket);
+            FileOutputStream fos = new FileOutputStream("arquivos/arquivo_recebido.txt");
+            while (true) {
+                byte[] buffer = new byte[1050];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                PacketReceiver pacote = new PacketReceiver(packet);
+                if (pacote.getAck() == -1) {
+                    break;
+                }
+                fos.write(pacote.getPayload());
+                System.out.println("Recebido: " + new String(pacote.getPayload()));
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,14 +74,17 @@ public class TCPClient {
 
     public static void main(String[] args) {
         TCPClient client = new TCPClient("localhost", 12345);
+
         Scanner input = new Scanner(System.in);
-        client.handShake();
         while (true) {
             System.out.println("Digite uma mensagem para enviar ao servidor: ");
             String message = input.nextLine();
             client.sendMessage(message);
             if (message.equals("sair")) {
                 break;
+            }
+            if (message.equals("arquivo.txt")) {
+                client.receiveFile();
             }
         }
         input.close();
