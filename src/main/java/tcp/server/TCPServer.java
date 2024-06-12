@@ -30,8 +30,6 @@ public class TCPServer {
     public void sendFinishMessage() {
         PacketTransmitter packet = new PacketTransmitter("sair".getBytes(), -1, 0, 0);
         DatagramPacket datagramPacket = packet.getPacket();
-        datagramPacket.setAddress(address);
-        datagramPacket.setPort(port);
         try {
             socket.send(datagramPacket);
         } catch (IOException e) {
@@ -43,16 +41,34 @@ public class TCPServer {
         try {
             FileInputStream fis = new FileInputStream("arquivos/" + fileName);
             byte[] buffer = new byte[1024];
-            int bytesRead; // Lê o primeiro chunk de bytes (1024 bytes
+            int bytesRead; // Lê o primeiro chunk de bytes (1024 bytes)
+            int seqNumber = 0;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 byte[] data = new byte[bytesRead];
+                seqNumber ++ ;
                 System.arraycopy(buffer, 0, data, 0, bytesRead);
-                PacketTransmitter packet = new PacketTransmitter(data, 0, 0, 0);
+                PacketTransmitter packet = new PacketTransmitter(data, 1, 0, seqNumber);
                 DatagramPacket datagramPacket = packet.getPacket();
-                datagramPacket.setAddress(address);
-                datagramPacket.setPort(port);
                 socket.send(datagramPacket);
             }
+            byte[] bufferAck = new byte[100];
+            DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
+            PacketReceiver pacote;
+            socket.setSoTimeout(1);
+            try{
+                while (true) {
+                    socket.receive(packetAck);
+                    pacote = new PacketReceiver(packetAck);
+                    System.out.println("Ack recebido: " + pacote.getAck());
+                    if (pacote.getAck() == -1) {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                socket.setSoTimeout(0);
+                e.printStackTrace();
+            }
+
             fis.close();
             sendFinishMessage();
 
@@ -72,6 +88,7 @@ public class TCPServer {
                 System.out.println("Mensagem recebida: " + payload);
                 address = packet.getAddress();
                 port = packet.getPort();
+                socket.connect(address, port);
 
                 // pacote.printDataHexadecimal();
                 if (payload.equals("arquivo.txt")) {

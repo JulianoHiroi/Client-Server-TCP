@@ -3,3 +3,24 @@
  2 bytes : rcvWindow; // Numero de bytes disponivceis no buffer  
  2 bytes : checksum; 
 
+
+
+
+------------------------------------SISTEMA DE ACK---------------------------------------------------
+
+// Fazer o sistema de ack da parte do cliente 
+
+
+-----------------------------------SISTEMA DE TIMEOUT-----------------------------------------------
+// Fazer o sistema de timeout da mensagem
+
+
+------------------------------------ JANELA DE ENVIO DESLIZANTE--------------------------------------
+
+
+// Fazer o sistema de Janela deslizante no envio de pacotes  --> fazer uma máquina de estados que possui dois estados : ENVIO  e RECEBIMENTO
+// - No estado ENVIO, ele irá enviar os pacotes conforme o tamanho da janela --> Quando enviar tudo na janela vai para o estado RECEBIMENTO
+// - No estado RECEBIMENTO, ele irá receber os Ack --> Para isso set o timeout para um valor bem pequeno , para ler todos os pacotes e sair quando não houver mais pacotes para ler --> Vai para o estado ENVIO quando ler tudo, passando o valor de ACK
+// Pode implementar checagem quando é recebidos 3 pacotes de ACK iguais , já retorna para o estado envio para o seq number do Ack recebido 
+
+// Fiqu 

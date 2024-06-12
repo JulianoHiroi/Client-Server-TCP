@@ -16,7 +16,7 @@ public class PacketTransmitter {
     private byte[] header = null;
     private DatagramPacket packet = null;
 
-    public PacketTransmitter(byte[] payload, int ack, int rcvWindow, int seqNumber) {
+    public PacketTransmitter(byte[] payload , int ack, int rcvWindow, int seqNumber) {
         this.payload = payload;
         this.dataLength = payload.length + 12;
         this.data = new byte[dataLength];

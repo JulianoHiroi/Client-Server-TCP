@@ -38,10 +38,18 @@ public class TCPClient {
             DatagramPacket datagramPacket = packet.getPacket();
 
             // packet.printDataHexadecimal();
-            datagramPacket.setAddress(serverAddress);
-            datagramPacket.setPort(serverPort);
             socket.send(datagramPacket);
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void sendAck(int ack){
+        try{
+            byte[] payload = new byte[0];
+            PacketTransmitter packet = new PacketTransmitter( payload , ack, 0, 0);
+            DatagramPacket datagramPacket = packet.getPacket();
+            socket.send(datagramPacket);
+        }catch(IOException e){
             e.printStackTrace();
         }
     }
@@ -57,8 +65,8 @@ public class TCPClient {
                 if (pacote.getAck() == -1) {
                     break;
                 }
+                sendAck(pacote.getSeqNumber());
                 fos.write(pacote.getPayload());
-                System.out.println("Recebido: " + new String(pacote.getPayload()));
 
             }
         } catch (IOException e) {
