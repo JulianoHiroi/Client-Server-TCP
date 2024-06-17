@@ -1,6 +1,7 @@
 package tcp.server;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -22,7 +23,18 @@ public class TCPServer {
             e.printStackTrace();
         }
     }
+    public void sendMessage(String message) {
+        try {
+            byte[] payload = message.getBytes();
+            PacketTransmitter packet = new PacketTransmitter(payload, 0, 0, 0);
+            DatagramPacket datagramPacket = packet.getPacket();
 
+            // packet.printDataHexadecimal();
+            socket.send(datagramPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public DatagramSocket getSocket() {
         return socket;
     }
@@ -38,18 +50,24 @@ public class TCPServer {
     }
 
     public void sendFile(String fileName) {
+        //Verifica a existência do arquivo e envia uma mensagem de erro caso não exista
+        // caso exista, envia que existe o arquivo
+
         try {
-            FileInputStream fis = new FileInputStream("arquivos/" + fileName);
+            
+            FileInputStream fis = new FileInputStream("arquivos_envio/" + fileName);
+            System.out.println("Arquivo encontrado");
+            sendMessage("Arquivo encontrado");
             byte[] buffer = new byte[1024];
             int bytesRead; // Lê o primeiro chunk de bytes (1024 bytes)
             int seqNumber = 0;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 byte[] data = new byte[bytesRead];
-                seqNumber ++ ;
                 System.arraycopy(buffer, 0, data, 0, bytesRead);
                 PacketTransmitter packet = new PacketTransmitter(data, 1, 0, seqNumber);
                 DatagramPacket datagramPacket = packet.getPacket();
                 socket.send(datagramPacket);
+                seqNumber ++ ;
             }
             byte[] bufferAck = new byte[100];
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
@@ -66,12 +84,16 @@ public class TCPServer {
                 }
             } catch (IOException e) {
                 socket.setSoTimeout(0);
-                e.printStackTrace();
             }
 
             fis.close();
             sendFinishMessage();
 
+        }catch (FileNotFoundException e){
+            sendMessage("Arquivo não encontrado");  
+            System.err.println("Arquivo não encontrado");
+            return;
+        
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,15 +106,15 @@ public class TCPServer {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 PacketReceiver pacote = new PacketReceiver(packet);
-                String payload = new String(pacote.getPayload());
-                System.out.println("Mensagem recebida: " + payload);
                 address = packet.getAddress();
                 port = packet.getPort();
                 socket.connect(address, port);
-
+                String payload = new String(pacote.getPayload());
+                System.out.println("Mensagem recebida: " + payload);
+                String[] words = payload.split(" ");
                 // pacote.printDataHexadecimal();
-                if (payload.equals("arquivo.txt")) {
-                    sendFile(payload);
+                if (words[0].equalsIgnoreCase("get") && words.length == 2){
+                    sendFile(words[1]);
                 }
                 if (payload.equals("sair")) {
                     break;

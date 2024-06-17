@@ -1,5 +1,8 @@
 package tcp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import tcp.client.TCPClient;
 import tcp.server.TCPServer;
 
@@ -9,22 +12,25 @@ import tcp.server.TCPServer;
  */
 public class App {
     public static void main(String[] args) {
-        Thread app1Thread = new Thread(() -> {
-            TCPClient.main(new String[0]);
-        });
-
-        // Inicializa a segunda aplicação
-        Thread app2Thread = new Thread(() -> {
-            TCPServer.main(new String[0]);
-        });
-        app1Thread.start();
-        app2Thread.start();
-        try {
-            // Espera ambas as aplicações terminarem
-            app1Thread.join();
-            app2Thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        List<Integer> list = new ArrayList<Integer>();
+        for (int i = 0; i < 15; i++) {
+            list.add(null);
         }
+        int number = 0;
+        boolean isServer = false;
+        for (int i= 0 ;  i < 10 ; i++){
+            list.set(i, number);
+            number++;
+            if(i == 5 && isServer == false){
+                for (int j = 0; j < 5; j++) {
+                    list.removeFirst();
+                    list.add(null);
+                }
+                i = -1;
+                isServer = true;
+            }
+        }
+        System.out.println(list);
     }
+    
 }

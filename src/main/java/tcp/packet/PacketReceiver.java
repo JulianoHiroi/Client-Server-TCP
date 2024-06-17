@@ -87,4 +87,8 @@ public class PacketReceiver {
     public byte[] getPayload() {
         return this.payload;
     }
+    @Override
+    public String toString(){
+        return "Ack: " + ack + " SeqNumber: " + seqNumber + " RcvWindow: " + rcvWindow + " Checksum: " + checksum;
+    }
 }
