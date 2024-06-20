@@ -58,7 +58,6 @@ public class TCPClient {
     }
 
     public void requestFile(String[] words) {
-        String message = words[0] + " " + words[1]; 
         byte[] buffer = new byte[1050];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length); 
         try {
@@ -89,6 +88,15 @@ public class TCPClient {
                 socket.receive(packet);
                 pacote = new PacketReceiver(packet);
                 if (pacote.getAck() == -1) {
+                    pacotes.forEach(p -> {
+                        if (p != null) {
+                            try {
+                                fos.write(p.getPayload());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
                     System.out.println("Arquivo recebido com sucesso");
                     break;
                 }
@@ -127,8 +135,6 @@ public class TCPClient {
                     }
                 }
                 sendAck(numberAck);
-                
-                
             }
             fos.close();
             System.out.println(pacotes.size() + " pacotes recebidos");

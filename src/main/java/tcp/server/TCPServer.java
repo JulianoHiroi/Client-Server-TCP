@@ -13,6 +13,7 @@ import tcp.packet.*;
 public class TCPServer {
     private DatagramSocket socket;
     private InetAddress address;
+    private int windowSize;
     private int port;
 
     public TCPServer(int port) {
@@ -52,7 +53,6 @@ public class TCPServer {
     public void sendFile(String fileName) {
         //Verifica a existência do arquivo e envia uma mensagem de erro caso não exista
         // caso exista, envia que existe o arquivo
-
         try {
             
             FileInputStream fis = new FileInputStream("arquivos_envio/" + fileName);
@@ -61,31 +61,41 @@ public class TCPServer {
             byte[] buffer = new byte[1024];
             int bytesRead; // Lê o primeiro chunk de bytes (1024 bytes)
             int seqNumber = 0;
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                byte[] data = new byte[bytesRead];
-                System.arraycopy(buffer, 0, data, 0, bytesRead);
-                PacketTransmitter packet = new PacketTransmitter(data, 1, 0, seqNumber);
-                DatagramPacket datagramPacket = packet.getPacket();
-                socket.send(datagramPacket);
-                seqNumber ++ ;
-            }
+
             byte[] bufferAck = new byte[100];
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
             PacketReceiver pacote;
-            socket.setSoTimeout(1);
-            try{
-                while (true) {
-                    socket.receive(packetAck);
-                    pacote = new PacketReceiver(packetAck);
-                    System.out.println("Ack recebido: " + pacote.getAck());
-                    if (pacote.getAck() == -1) {
+            windowSize = 10;
+            boolean finish = false;
+            while(finish != true){
+                for (int i = 0; i < windowSize; i++){
+                    bytesRead = fis.read(buffer);
+                    if(bytesRead == -1){
+                        finish = true;
                         break;
                     }
+                    byte[] data = new byte[bytesRead];
+                    System.arraycopy(buffer, 0, data, 0, bytesRead);
+                    PacketTransmitter packet = new PacketTransmitter(data, 1, 0, seqNumber);
+                    DatagramPacket datagramPacket = packet.getPacket();
+                    socket.send(datagramPacket);
+                    seqNumber ++ ;
                 }
-            } catch (IOException e) {
-                socket.setSoTimeout(0);
+                
+                socket.setSoTimeout(1);
+                try{
+                    while (true) {
+                        socket.receive(packetAck);
+                        pacote = new PacketReceiver(packetAck);
+                        System.out.println("Ack recebido: " + pacote.getAck());
+                        if (pacote.getAck() == -1) {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    socket.setSoTimeout(0);
+                }
             }
-
             fis.close();
             sendFinishMessage();
 
