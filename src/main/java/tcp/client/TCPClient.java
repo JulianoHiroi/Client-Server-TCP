@@ -17,7 +17,7 @@ public class TCPClient {
     private int serverPort;
     private InetAddress serverAddress;
     private DatagramSocket socket;
-    private int numberPacketMinimum = 2;
+    private int numberPacketMinimum = 20;
 
     public TCPClient(String serverAddress, int serverPort) {
         try {
@@ -79,7 +79,7 @@ public class TCPClient {
             // Recebe o arquivo
             FileOutputStream fos = new FileOutputStream("arquivos_recebidos/" + words[1]);
             List<PacketReceiver> pacotes = new ArrayList<PacketReceiver>(10);
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 50; i++) {
                 pacotes.add(null);
             }
             int seqInitial = 0;
