@@ -1,8 +1,10 @@
 package tcp.server;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -51,27 +53,33 @@ public class TCPServer {
     }
 
     public void sendFile(String fileName) {
-        //Verifica a existência do arquivo e envia uma mensagem de erro caso não exista
-        // caso exista, envia que existe o arquivo
         try {
-            
-            FileInputStream fis = new FileInputStream("arquivos_envio/" + fileName);
+            RandomAccessFile raf = new RandomAccessFile("arquivos_envio/" + fileName, "r");
             System.out.println("Arquivo encontrado");
             sendMessage("Arquivo encontrado");
             byte[] buffer = new byte[1024];
-            int bytesRead; // Lê o primeiro chunk de bytes (1024 bytes)
+            int bytesRead;
             int seqNumber = 0;
-
             byte[] bufferAck = new byte[100];
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
             PacketReceiver pacote;
-            windowSize = 10;
             boolean finish = false;
-            while(finish != true){
-                for (int i = 0; i < windowSize; i++){
-                    bytesRead = fis.read(buffer);
-                    if(bytesRead == -1){
-                        finish = true;
+            windowSize = 10;
+            int lastAck = -1;
+            int lastSeq = 100000;
+            while (!finish) {
+                if(lastAck == lastSeq){
+                    break;
+                }
+                if(seqNumber != lastAck + 1){
+                    raf.seek((lastAck + 1) * 1024);
+                    seqNumber = lastAck + 1;
+                }
+                for (int i = 0; i < windowSize; i++) {
+                    bytesRead = raf.read(buffer);
+                    if (bytesRead == -1) {
+                        lastSeq = seqNumber - 1;
+                        System.out.println("Last Seq : " + lastSeq);
                         break;
                     }
                     byte[] data = new byte[bytesRead];
@@ -79,31 +87,28 @@ public class TCPServer {
                     PacketTransmitter packet = new PacketTransmitter(data, 1, 0, seqNumber);
                     DatagramPacket datagramPacket = packet.getPacket();
                     socket.send(datagramPacket);
-                    seqNumber ++ ;
+                    seqNumber++;
                 }
-                
+
                 socket.setSoTimeout(1);
-                try{
+                try {
                     while (true) {
                         socket.receive(packetAck);
                         pacote = new PacketReceiver(packetAck);
                         System.out.println("Ack recebido: " + pacote.getAck());
-                        if (pacote.getAck() == -1) {
-                            break;
+                        if(pacote.getAck() > lastAck){
+                            lastAck = pacote.getAck();
                         }
                     }
                 } catch (IOException e) {
                     socket.setSoTimeout(0);
                 }
             }
-            fis.close();
+            raf.close();
             sendFinishMessage();
-
-        }catch (FileNotFoundException e){
-            sendMessage("Arquivo não encontrado");  
+        } catch (FileNotFoundException e) {
+            sendMessage("Arquivo não encontrado");
             System.err.println("Arquivo não encontrado");
-            return;
-        
         } catch (IOException e) {
             e.printStackTrace();
         }

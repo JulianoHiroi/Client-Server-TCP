@@ -58,8 +58,9 @@ public class TCPClient {
     }
 
     public void requestFile(String[] words) {
-        byte[] buffer = new byte[1050];
+        byte[] buffer = new byte[1100];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length); 
+        boolean fail = true;
         try {
             // Envia requisição e verificação do Arquivo
             socket.receive(packet);
@@ -100,10 +101,15 @@ public class TCPClient {
                     System.out.println("Arquivo recebido com sucesso");
                     break;
                 }
-                System.out.println("Pacote recebido: " + pacote.getSeqNumber());
+               
                 seqNumber = pacote.getSeqNumber();
+                if(seqNumber == 11 && fail == true){
+                    fail = false;
+                    continue;
+                }
+                System.out.println("Pacote recebido: " + seqNumber);
                 int posArray = seqNumber - seqInitial;
-                if(pacotes.get(posArray) == null){
+                if(posArray >= 0 && pacotes.get(posArray) == null){
                     pacotes.set(posArray, pacote);
                 }
                 int numberAck = seqInitial;
@@ -129,7 +135,6 @@ public class TCPClient {
                     } 
                     
                     if (pacotes.get(i) == null) {
-                        System.out.println("Pacote nulo: " + i);
                         numberAck = seqInitial + i - 1;
                         break;
                     }
@@ -137,8 +142,6 @@ public class TCPClient {
                 sendAck(numberAck);
             }
             fos.close();
-            System.out.println(pacotes.size() + " pacotes recebidos");
-            System.out.println(pacotes);
         } catch (IOException e) {
             e.printStackTrace();
         }
