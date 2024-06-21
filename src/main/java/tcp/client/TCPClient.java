@@ -60,7 +60,6 @@ public class TCPClient {
     public void requestFile(String[] words) {
         byte[] buffer = new byte[1100];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length); 
-        boolean fail = true;
         try {
             // Envia requisição e verificação do Arquivo
             socket.receive(packet);
@@ -80,7 +79,7 @@ public class TCPClient {
             // Recebe o arquivo
             FileOutputStream fos = new FileOutputStream("arquivos_recebidos/" + words[1]);
             List<PacketReceiver> pacotes = new ArrayList<PacketReceiver>(10);
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 20; i++) {
                 pacotes.add(null);
             }
             int seqInitial = 0;
@@ -98,16 +97,14 @@ public class TCPClient {
                             }
                         }
                     });
+                    System.out.println("Recebido pacote de fim de transmissão");
                     System.out.println("Arquivo recebido com sucesso");
                     break;
                 }
                
                 seqNumber = pacote.getSeqNumber();
-                if(seqNumber == 11 && fail == true){
-                    fail = false;
-                    continue;
-                }
-                System.out.println("Pacote recebido: " + seqNumber);
+               
+                //System.out.println("Pacote recebido: " + seqNumber);
                 int posArray = seqNumber - seqInitial;
                 if(posArray >= 0 && pacotes.get(posArray) == null){
                     pacotes.set(posArray, pacote);

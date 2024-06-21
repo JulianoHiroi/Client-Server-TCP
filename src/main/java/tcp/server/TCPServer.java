@@ -64,10 +64,11 @@ public class TCPServer {
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
             PacketReceiver pacote;
             boolean finish = false;
-            windowSize = 10;
+            windowSize = 100;
             int lastAck = -1;
             int lastSeq = 100000;
             while (!finish) {
+                //System.out.println("Um ciclo é reiniciado");
                 if(lastAck == lastSeq){
                     break;
                 }
@@ -95,7 +96,7 @@ public class TCPServer {
                     while (true) {
                         socket.receive(packetAck);
                         pacote = new PacketReceiver(packetAck);
-                        System.out.println("Ack recebido: " + pacote.getAck());
+                        //System.out.println("Ack recebido: " + pacote.getAck());
                         if(pacote.getAck() > lastAck){
                             lastAck = pacote.getAck();
                         }
@@ -105,6 +106,7 @@ public class TCPServer {
                 }
             }
             raf.close();
+            System.out.println("Enviando mensagem de FIM");
             sendFinishMessage();
         } catch (FileNotFoundException e) {
             sendMessage("Arquivo não encontrado");
