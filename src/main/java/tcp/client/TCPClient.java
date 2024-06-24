@@ -7,9 +7,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
 
 import tcp.packet.*;
 
@@ -84,6 +86,7 @@ public class TCPClient {
             RandomAccessFile fos = new RandomAccessFile("arquivos_recebidos/" + words[1], "rw");
             int seqNumber = 0;
             int lastAck = -1;
+            socket.setSoTimeout(1000);
             while (true) {
                 socket.receive(packet);
                 pacote = new PacketReceiver(packet);
@@ -100,7 +103,10 @@ public class TCPClient {
                 sendAck(lastAck);
             }
             fos.close();
-        } catch (IOException e) {
+        }catch ( SocketTimeoutException e){
+            System.out.println("Servidor não responde - Erro na conexão");
+            
+        }catch (IOException e) {
             e.printStackTrace();
         }
         

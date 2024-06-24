@@ -81,7 +81,6 @@ public class TCPServer {
                 // Envia os pacotes
                 for (int i = 0; i < windowSize; i++) {
                     bytesRead = raf.read(buffer);
-                
                     if (bytesRead == -1) {
                         System.out.println("Fim do arquivo");
                         break;
@@ -96,10 +95,12 @@ public class TCPServer {
 
                 
                 // Lê os acks que chegaram
+                int acksReceived = 0;
                 socket.setSoTimeout(1);
                 try {
                     while (true) {
                         socket.receive(packetAck);
+                        acksReceived++;
                         pacote = new PacketReceiver(packetAck);
                         //System.out.println("Ack recebido: " + pacote.getAck());
                         if(pacote.getAck() > lastAck){
@@ -108,6 +109,21 @@ public class TCPServer {
                     }
                 } catch (IOException e) {
                     socket.setSoTimeout(0);
+                }
+                if (acksReceived == 0) {
+                    socket.setSoTimeout(2000);
+                    try{
+                        socket.receive(packetAck);
+                        pacote = new PacketReceiver(packetAck);
+                        //System.out.println("Ack recebido: " + pacote.getAck());
+                        if(pacote.getAck() > lastAck){
+                            lastAck = pacote.getAck();
+                        }
+                    }catch(IOException e){
+                        System.out.println("Timeout - Fechando a conexão");
+                        socket.setSoTimeout(0);
+                        return;
+                    }
                 }
             }
             raf.close();
