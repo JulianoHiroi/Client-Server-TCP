@@ -1,6 +1,5 @@
 package tcp.client;
-
-import java.io.FileOutputStream;
+ 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
@@ -8,10 +7,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Scanner;
-import java.util.concurrent.TimeoutException;
 
 import tcp.packet.*;
 
@@ -23,11 +20,18 @@ public class TCPClient {
 
     public TCPClient(String serverAddress, int serverPort) {
         try {
-            this.serverAddress = InetAddress.getByName(serverAddress);
-            this.serverPort = serverPort;
-            this.socket = new DatagramSocket();
+            socket = new DatagramSocket();
+            PacketTransmitter packet = new PacketTransmitter("Connect".getBytes(), 0, 0, 0);
+            DatagramPacket datagramPacket = packet.getPacket();
+            datagramPacket.setAddress(InetAddress.getByName(serverAddress));
+            datagramPacket.setPort(serverPort);
+            socket.send(datagramPacket);
+            DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
+            socket.receive(receivePacket);
+            this.serverAddress = receivePacket.getAddress();
+            this.serverPort = receivePacket.getPort();
             socket.connect(this.serverAddress, this.serverPort);
-            System.out.println("Cliente UDP iniciado...");
+            System.out.println("Cliente TCP iniciado...");
         } catch (SocketException e) {
 
             e.printStackTrace();
@@ -140,6 +144,13 @@ public class TCPClient {
         closeSocket();
     }
     public static void main(String[] args) {
+        //Scanner input = new Scanner(System.in);
+        //System.out.println("Cliente TCP iniciado...");
+        //System.out.println("Digite o endereço do servidor: ");
+       // String serverAddress = input.nextLine();
+        //System.out.println("Digite a porta do servidor: ");
+        //int serverPort = input.nextInt();
+        //TCPClient client = new TCPClient(serverAddress, serverPort);
         TCPClient client = new TCPClient("localhost", 12345);
         client.start();
     }
