@@ -56,31 +56,34 @@ public class TCPServer {
         try {
             RandomAccessFile raf = new RandomAccessFile("arquivos_envio/" + fileName, "r");
             System.out.println("Arquivo encontrado");
-            sendMessage("Arquivo encontrado");
+            sendMessage("Arquivo encontrado " + raf.length()/1024);
+
+
             byte[] buffer = new byte[1024];
             int bytesRead;
             int seqNumber = 0;
             byte[] bufferAck = new byte[100];
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
             PacketReceiver pacote;
-            boolean finish = false;
+
+
+
             windowSize = 100;
             int lastAck = -1;
-            int lastSeq = 100000;
-            while (!finish) {
-                //System.out.println("Um ciclo é reiniciado");
-                if(lastAck == lastSeq){
-                    break;
-                }
-                if(seqNumber != lastAck + 1){
-                    raf.seek((lastAck + 1) * 1024);
-                    seqNumber = lastAck + 1;
-                }
+            long fileSize = raf.length() / 1024;
+
+           
+            while (lastAck != fileSize) {
+                raf.seek((lastAck + 1) * 1024);
+                seqNumber = lastAck + 1;
+
+
+                // Envia os pacotes
                 for (int i = 0; i < windowSize; i++) {
                     bytesRead = raf.read(buffer);
+                
                     if (bytesRead == -1) {
-                        lastSeq = seqNumber - 1;
-                        System.out.println("Last Seq : " + lastSeq);
+                        System.out.println("Fim do arquivo");
                         break;
                     }
                     byte[] data = new byte[bytesRead];
@@ -91,6 +94,8 @@ public class TCPServer {
                     seqNumber++;
                 }
 
+                
+                // Lê os acks que chegaram
                 socket.setSoTimeout(1);
                 try {
                     while (true) {
