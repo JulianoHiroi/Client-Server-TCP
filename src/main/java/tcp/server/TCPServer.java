@@ -6,7 +6,9 @@ import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.SocketException;
+import java.util.Random;
 
 import tcp.packet.*;
 
@@ -35,7 +37,7 @@ public class TCPServer implements Runnable {
             PacketTransmitter packet = new PacketTransmitter((portServer + " Conexão estabelecida").getBytes(), 0, 0, 0);
             DatagramPacket datagramPacket = packet.getPacket();
             socket.send(datagramPacket);
-            System.out.println("Servidor TCP iniciado na porta " + portServer + "...");
+            System.out.println("Thread para cliente TCP iniciado na porta " + portServer + "...");
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -144,27 +146,45 @@ public class TCPServer implements Runnable {
         }
     }
 
+        
     public int getRandomPort() {
-        // Retorna uma porta que não está sendo usada no range de 12345 até 20000
-        return (int) (Math.random() * (20000 - 12346) + 12346);
+        Random random = new Random();
+        int port;
+        while (true) {
+            port = random.nextInt(20000 - 12345) + 12345;
+            if (isPortAvailable(port)) {
+                break;
+            }
+        }
+        return port;
+    }
+
+    private boolean isPortAvailable(int port) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            serverSocket.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void run() {
         while (true) {
             try {
                 byte[] buffer = new byte[1024];
-                System.out.println("Esperando mensagem...");
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 PacketReceiver pacote = new PacketReceiver(packet);
                 String payload = new String(pacote.getPayload());
-                System.out.println("Mensagem recebida: " + payload);
+                System.out.println("Mensagem recebida do " + address  + ":" + portClient  + ": " + payload);
                 String[] words = payload.split(" ");
                 // pacote.printDataHexadecimal();
                 if (words[0].equalsIgnoreCase("get") && words.length == 2) {
                     sendFile(words[1]);
                 }
                 if (payload.equals("sair")) {
+                    socket.close();
+                    System.out.println("Conexão encerrada com o cliente: " + address + ":" + portClient);
                     break;
                 }
             } catch (IOException e) {

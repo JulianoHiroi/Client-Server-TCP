@@ -21,23 +21,38 @@ public class TCPClient {
     public TCPClient(String serverAddress, int serverPort) {
         try {
             socket = new DatagramSocket();
-            PacketTransmitter packet = new PacketTransmitter("Connect".getBytes(), 0, 0, 0);
-            DatagramPacket datagramPacket = packet.getPacket();
-            datagramPacket.setAddress(InetAddress.getByName(serverAddress));
-            datagramPacket.setPort(serverPort);
-            socket.send(datagramPacket);
-            DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
-            socket.receive(receivePacket);
-            this.serverAddress = receivePacket.getAddress();
-            this.serverPort = receivePacket.getPort();
+            requestConnection(socket, serverAddress, serverPort);
             socket.connect(this.serverAddress, this.serverPort);
             System.out.println("Cliente TCP iniciado...");
         } catch (SocketException e) {
-
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void requestConnection(DatagramSocket socket, String serverAddress, int serverPort) {
+        while(true){
+            try {
+                socket.setSoTimeout(4000);
+                PacketTransmitter packet = new PacketTransmitter("Connect".getBytes(), 0, 0, 0);
+                DatagramPacket datagramPacket = packet.getPacket();
+                datagramPacket.setAddress(InetAddress.getByName(serverAddress));
+                datagramPacket.setPort(serverPort);
+                socket.send(datagramPacket);
+                DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
+                socket.receive(receivePacket);
+                this.serverAddress = receivePacket.getAddress();
+                this.serverPort = receivePacket.getPort();
+                socket.setSoTimeout(0);
+                break;
+            } catch(SocketTimeoutException e){
+                System.out.println("Tentando conectar novamente...");
+            }catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+       
     }
 
     public void sendMessage(String message) {
