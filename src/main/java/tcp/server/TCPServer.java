@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.Random;
+import java.util.Scanner;
 
 import tcp.packet.*;
 
@@ -17,6 +18,7 @@ public class TCPServer implements Runnable {
     private InetAddress address;
     private int windowSize;
     private int portClient;
+    private Scanner input = new Scanner(System.in);
 
     public TCPServer(int portServer) {
         try {
@@ -28,13 +30,18 @@ public class TCPServer implements Runnable {
     }
 
     public TCPServer(int portServer, InetAddress address, int portClient) {
+        acceptConection(portServer, address, portClient);
+    }
+
+    public void acceptConection(int portServer, InetAddress address, int portClient) {
         try {
             this.socket = new DatagramSocket(portServer);
             this.address = address;
             this.portClient = portClient;
             socket.connect(address, portClient);
             // envia a mensagem de conexão para o cliente com a nova porta do servidor
-            PacketTransmitter packet = new PacketTransmitter((portServer + " Conexão estabelecida").getBytes(), 0, 0, 0);
+            PacketTransmitter packet = new PacketTransmitter((portServer + " Conexão estabelecida").getBytes(), 0, 0,
+                    0);
             DatagramPacket datagramPacket = packet.getPacket();
             socket.send(datagramPacket);
             System.out.println("Thread para cliente TCP iniciado na porta " + portServer + "...");
@@ -110,7 +117,7 @@ public class TCPServer implements Runnable {
                         socket.receive(packetAck);
                         acksReceived++;
                         pacote = new PacketReceiver(packetAck);
-                        //System.out.println("Ack recebido: " + pacote.getAck());
+                        // System.out.println("Ack recebido: " + pacote.getAck());
                         if (pacote.getAck() > lastAck) {
                             lastAck = pacote.getAck();
                         }
@@ -123,7 +130,7 @@ public class TCPServer implements Runnable {
                     try {
                         socket.receive(packetAck);
                         pacote = new PacketReceiver(packetAck);
-                        //System.out.println("Ack recebido: " + pacote.getAck());
+                        // System.out.println("Ack recebido: " + pacote.getAck());
                         if (pacote.getAck() > lastAck) {
                             lastAck = pacote.getAck();
                         }
@@ -135,6 +142,7 @@ public class TCPServer implements Runnable {
                     }
                 }
             }
+            ;
             raf.close();
             System.out.println("Enviando mensagem de FIM");
             sendFinishMessage();
@@ -146,7 +154,6 @@ public class TCPServer implements Runnable {
         }
     }
 
-        
     public int getRandomPort() {
         Random random = new Random();
         int port;
@@ -157,6 +164,30 @@ public class TCPServer implements Runnable {
             }
         }
         return port;
+    }
+
+    public void chat() {
+        try {
+            String mensagem = "";
+            while (mensagem != "sair") {
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                PacketReceiver pacote = new PacketReceiver(packet);
+                String payload = new String(pacote.getPayload());
+                if (payload.equals("sair")) {
+                    System.out.println("Chat encerrado com o cliente: " + address + ":" + portClient);
+                    break;
+                }
+                System.out.println("Mensagem recebida do " + address + ":" + portClient + ": " + payload);
+                System.out.println(
+                        "Digite a mensagem que deseja enviar para o cliente" + address + ":" + portClient + ":");
+                mensagem = input.nextLine();
+                sendMessage(mensagem);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean isPortAvailable(int port) {
@@ -176,16 +207,17 @@ public class TCPServer implements Runnable {
                 socket.receive(packet);
                 PacketReceiver pacote = new PacketReceiver(packet);
                 String payload = new String(pacote.getPayload());
-                System.out.println("Mensagem recebida do " + address  + ":" + portClient  + ": " + payload);
+                System.out.println("Mensagem recebida do " + address + ":" + portClient + ": " + payload);
                 String[] words = payload.split(" ");
                 // pacote.printDataHexadecimal();
                 if (words[0].equalsIgnoreCase("get") && words.length == 2) {
                     sendFile(words[1]);
-                }
-                if (payload.equals("sair")) {
+                } else if (payload.equals("sair")) {
                     socket.close();
                     System.out.println("Conexão encerrada com o cliente: " + address + ":" + portClient);
                     break;
+                } else if (payload.equals("Chat")) {
+                    chat();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
