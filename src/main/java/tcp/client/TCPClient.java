@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 import tcp.packet.*;
+import tcp.security.MD5Encryption;
 
 public class TCPClient {
 
@@ -134,6 +135,8 @@ public class TCPClient {
                 System.out.println("Erro ao receber arquivo");
                 return;
             }
+
+
             int[] pacotes = new int[fileSize + 1];
             // Cria uma pasta com o nome arquivos_recebidos + porta do cliente
             Files.createDirectories(Paths.get("arquivos_recebidos/" + serverPort));
@@ -141,13 +144,13 @@ public class TCPClient {
             RandomAccessFile fos = new RandomAccessFile("arquivos_recebidos/" + serverPort + "/" + words[1], "rw");
             int seqNumber = 0;
             int lastAck = -1;
+            String HashFile = "";
             socket.setSoTimeout(1000);
             while (true) {
                 socket.receive(packet);
                 pacote = new PacketReceiver(packet);
                 if (pacote.getAck() == -1) {
-                    System.out.println("Recebido pacote de fim de transmissão");
-                    System.out.println("Arquivo recebido com sucesso");
+                    HashFile = new String(pacote.getPayload());
                     break;
                 }
                 seqNumber = pacote.getSeqNumber();
@@ -161,6 +164,12 @@ public class TCPClient {
                 sendAck(lastAck);
             }
             fos.close();
+            if(MD5Encryption.encryptMD5File("arquivos_recebidos/" + serverPort + "/" + words[1]).equals(HashFile)){
+                System.out.println("Arquivo recebido com sucesso");
+            }else{
+                System.out.println("Erro ao receber arquivo");
+                Files.deleteIfExists(Paths.get("arquivos_recebidos/" + serverPort + "/" + words[1]));
+            }
         } catch (SocketTimeoutException e) {
             System.out.println("Servidor não responde - Erro na conexão");
 

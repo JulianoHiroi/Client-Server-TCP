@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 import tcp.packet.*;
+import tcp.security.MD5Encryption;
 
 public class TCPServer implements Runnable {
     private DatagramSocket socket;
@@ -41,7 +42,7 @@ public class TCPServer implements Runnable {
             socket.connect(address, portClient);
             // envia a mensagem de conexão para o cliente com a nova porta do servidor
             PacketTransmitter packet = new PacketTransmitter((portServer + " Conexão estabelecida").getBytes(), 0, 0,
-                    0);
+0);
             DatagramPacket datagramPacket = packet.getPacket();
             socket.send(datagramPacket);
             System.out.println("Thread para cliente TCP iniciado na porta " + portServer + "...");
@@ -63,8 +64,9 @@ public class TCPServer implements Runnable {
         }
     }
 
-    public void sendFinishMessage() {
-        PacketTransmitter packet = new PacketTransmitter("sair".getBytes(), -1, 0, 0);
+    public void sendFinishMessage(String filePath) {
+        String HashFile = MD5Encryption.encryptMD5File(filePath);
+        PacketTransmitter packet = new PacketTransmitter(HashFile.getBytes(), -1, 0, 0);
         DatagramPacket datagramPacket = packet.getPacket();
         try {
             socket.send(datagramPacket);
@@ -74,8 +76,9 @@ public class TCPServer implements Runnable {
     }
 
     public void sendFile(String fileName) {
+        String filePath = "arquivos_envio/" + fileName;
         try {
-            RandomAccessFile raf = new RandomAccessFile("arquivos_envio/" + fileName, "r");
+            RandomAccessFile raf = new RandomAccessFile(filePath, "r");
             System.out.println("Arquivo encontrado");
             sendMessage("Arquivo encontrado " + raf.length() / 1024);
 
@@ -145,7 +148,7 @@ public class TCPServer implements Runnable {
             ;
             raf.close();
             System.out.println("Enviando mensagem de FIM");
-            sendFinishMessage();
+            sendFinishMessage(filePath);
         } catch (FileNotFoundException e) {
             sendMessage("Arquivo não encontrado");
             System.err.println("Arquivo não encontrado");
@@ -169,6 +172,7 @@ public class TCPServer implements Runnable {
     public void chat() {
         try {
             String mensagem = "";
+            System.out.println("Chat iniciado com o cliente: " + address + ":" + portClient);
             while (mensagem != "sair") {
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -231,7 +235,6 @@ public class TCPServer implements Runnable {
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                PacketReceiver pacote = new PacketReceiver(packet);
                 address = packet.getAddress();
                 portClient = packet.getPort();
                 int port = getRandomPort();
