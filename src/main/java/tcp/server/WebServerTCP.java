@@ -41,6 +41,9 @@ public class WebServerTCP implements Runnable {
     public void handleRequest() {
         try {
             String requestLine = in.readLine();
+            System.out.println();
+            System.out.println();
+            System.out.println("Request: " + requestLine);
             if (requestLine == null || !requestLine.startsWith("GET")) {
                 return;
             }
@@ -48,8 +51,14 @@ public class WebServerTCP implements Runnable {
             if (requestParts.length != 3) {
                 return;
             }
+            if(!requestParts[0].equals("GET") || !requestParts[2].equals("HTTP/1.1")) {
+                return;
+            }
             String filePath = requestParts[1].substring(1);  // Remove the leading "/"
             System.out.println("Request for file: " + filePath);
+            if(filePath == "" || filePath == null) {
+                filePath = "index.html";
+            }
             sendFile(filePath);
         } catch (IOException e) {
             e.printStackTrace();
@@ -58,7 +67,7 @@ public class WebServerTCP implements Runnable {
 
     public void sendFile(String filePath) {
         try {
-            File file = new File(filePath);
+            File file = new File("arquivos_envio/" + filePath);
             if (!file.exists()) {
                 sendNotFoundResponse();
                 return;
