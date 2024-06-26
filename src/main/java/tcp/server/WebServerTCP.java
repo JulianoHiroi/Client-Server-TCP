@@ -16,20 +16,17 @@ public class WebServerTCP implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
 
-    public WebServerTCP(int portServer) {
-        try {
-            this.serverSocket = new ServerSocket(portServer, 50, InetAddress.getLocalHost());
-            InetAddress serverAdress = serverSocket.getInetAddress();
-            System.out.println(serverAdress.getHostAddress());
-            System.out.println("Servidor TCP iniciado na porta 9000...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public WebServerTCP(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+    
+    public WebServerTCP(ServerSocket serverSocket, Socket clientSocket) {
+        this.serverSocket = serverSocket;
+        this.clientSocket = clientSocket;
     }
 
     public void acceptConnection() {
         try {
-            this.clientSocket = serverSocket.accept();
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
             InetAddress localAddress = InetAddress.getLocalHost();
@@ -38,6 +35,7 @@ public class WebServerTCP implements Runnable {
             e.printStackTrace();
         }
     }
+
     public void handleRequest() {
         try {
             String requestLine = in.readLine();
@@ -51,12 +49,12 @@ public class WebServerTCP implements Runnable {
             if (requestParts.length != 3) {
                 return;
             }
-            if(!requestParts[0].equals("GET") || !requestParts[2].equals("HTTP/1.1")) {
+            if (!requestParts[0].equals("GET") || !requestParts[2].equals("HTTP/1.1")) {
                 return;
             }
             String filePath = requestParts[1].substring(1);  // Remove the leading "/"
             System.out.println("Request for file: " + filePath);
-            if(filePath == "" || filePath == null) {
+            if (filePath.isEmpty()) {
                 filePath = "index.html";
             }
             sendFile(filePath);
@@ -74,9 +72,9 @@ public class WebServerTCP implements Runnable {
             }
 
             byte[] fileContent = new byte[(int) file.length()];
-            FileInputStream fis = new FileInputStream(file);
-            fis.read(fileContent);
-            fis.close();
+            try (FileInputStream fis = new FileInputStream(file)) {
+                fis.read(fileContent);
+            }
 
             sendHttpResponse(fileContent, "text/html");  // Assuming HTML for simplicity
         } catch (IOException e) {
@@ -104,10 +102,22 @@ public class WebServerTCP implements Runnable {
         out.flush();
     }
 
-    public void run() {
+    public void start() {
         while (true) {
+            try {
+                Socket client = serverSocket.accept();
+                new Thread(new WebServerTCP(serverSocket, client)).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void run() {
+        try {
             acceptConnection();
             handleRequest();
+        } finally {
             try {
                 clientSocket.close();
             } catch (IOException e) {
@@ -115,8 +125,17 @@ public class WebServerTCP implements Runnable {
             }
         }
     }
+
     public static void main(String[] args) {
-        WebServerTCP server = new WebServerTCP(9000);
-        new Thread(server).start();
+        try {
+            ServerSocket serverSocket = new ServerSocket(9000, 50, InetAddress.getLocalHost());
+            WebServerTCP server = new WebServerTCP(serverSocket);
+            InetAddress serverAddress = serverSocket.getInetAddress();
+            System.out.println(serverAddress.getHostAddress());
+            System.out.println("Servidor TCP iniciado na porta 9000...");
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
