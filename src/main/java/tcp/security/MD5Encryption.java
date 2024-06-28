@@ -45,10 +45,17 @@ public class MD5Encryption {
                 md.update(buffer, 0, bytesRead);
             }
 
-            // Executa o hash e retorna os primeiros dois bytes do array de bytes resultante
+            // Executa o hash
             byte[] fullHash = md.digest();
             file.close();
-            return new String(fullHash);
+
+            // Converte o hash para uma string hexadecimal
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : fullHash) {
+                hexString.append(String.format("%02x", b));
+            }
+
+            return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
             // Lança uma exceção se o algoritmo MD5 não for suportado
             throw new RuntimeException("Algoritmo MD5 não suportado", e);

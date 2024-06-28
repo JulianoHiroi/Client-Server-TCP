@@ -42,7 +42,7 @@ public class TCPServer implements Runnable {
             socket.connect(address, portClient);
             // envia a mensagem de conexão para o cliente com a nova porta do servidor
             PacketTransmitter packet = new PacketTransmitter((portServer + " Conexão estabelecida").getBytes(), 0, 0,
-0);
+                    0);
             DatagramPacket datagramPacket = packet.getPacket();
             socket.send(datagramPacket);
             System.out.println("Thread para cliente TCP iniciado na porta " + portServer + "...");
@@ -120,7 +120,7 @@ public class TCPServer implements Runnable {
                         socket.receive(packetAck);
                         acksReceived++;
                         pacote = new PacketReceiver(packetAck);
-                        // System.out.println("Ack recebido: " + pacote.getAck());
+                        System.out.println("Ack recebido: " + pacote.getAck());
                         if (pacote.getAck() > lastAck) {
                             lastAck = pacote.getAck();
                         }
@@ -232,6 +232,7 @@ public class TCPServer implements Runnable {
     public void on() {
         while (true) {
             try {
+                System.out.println("O host do servidor é " + InetAddress.getLocalHost().getHostAddress());
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
