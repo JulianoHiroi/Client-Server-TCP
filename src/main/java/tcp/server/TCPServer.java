@@ -120,7 +120,7 @@ public class TCPServer implements Runnable {
                         socket.receive(packetAck);
                         acksReceived++;
                         pacote = new PacketReceiver(packetAck);
-                        System.out.println("Ack recebido: " + pacote.getAck());
+                        // System.out.println("Ack recebido: " + pacote.getAck());
                         if (pacote.getAck() > lastAck) {
                             lastAck = pacote.getAck();
                         }
@@ -129,7 +129,7 @@ public class TCPServer implements Runnable {
                     socket.setSoTimeout(0);
                 }
                 if (acksReceived == 0) {
-                    socket.setSoTimeout(2000);
+                    socket.setSoTimeout(10000);
                     try {
                         socket.receive(packetAck);
                         pacote = new PacketReceiver(packetAck);
@@ -211,6 +211,9 @@ public class TCPServer implements Runnable {
                 socket.receive(packet);
                 PacketReceiver pacote = new PacketReceiver(packet);
                 String payload = new String(pacote.getPayload());
+                if (payload.equals("")) {
+                    continue;
+                }
                 System.out.println("Mensagem recebida do " + address + ":" + portClient + ": " + payload);
                 String[] words = payload.split(" ");
                 // pacote.printDataHexadecimal();

@@ -136,7 +136,6 @@ public class TCPClient {
                 return;
             }
 
-
             int[] pacotes = new int[fileSize + 1];
             // Cria uma pasta com o nome arquivos_recebidos + porta do cliente
             Files.createDirectories(Paths.get("arquivos_recebidos/" + serverPort));
@@ -164,9 +163,9 @@ public class TCPClient {
                 sendAck(lastAck);
             }
             fos.close();
-            if(MD5Encryption.encryptMD5File("arquivos_recebidos/" + serverPort + "/" + words[1]).equals(HashFile)){
+            if (MD5Encryption.encryptMD5File("arquivos_recebidos/" + serverPort + "/" + words[1]).equals(HashFile)) {
                 System.out.println("Arquivo recebido com sucesso");
-            }else{
+            } else {
                 System.out.println("Erro ao receber arquivo");
                 Files.deleteIfExists(Paths.get("arquivos_recebidos/" + serverPort + "/" + words[1]));
             }
@@ -214,14 +213,14 @@ public class TCPClient {
     }
 
     public static void main(String[] args) {
-        // Scanner input = new Scanner(System.in);
-        // System.out.println("Cliente TCP iniciado...");
-        // System.out.println("Digite o endereço do servidor: ");
-        // String serverAddress = input.nextLine();
-        // System.out.println("Digite a porta do servidor: ");
-        // int serverPort = input.nextInt();
-        // TCPClient client = new TCPClient(serverAddress, serverPort);
-        TCPClient client = new TCPClient("localhost", 12345);
+        Scanner input = new Scanner(System.in);
+        System.out.println("Cliente TCP iniciado...");
+        System.out.println("Digite o endereço do servidor: ");
+        String serverAddress = input.nextLine();
+        System.out.println("Digite a porta do servidor: ");
+        int serverPort = input.nextInt();
+        TCPClient client = new TCPClient(serverAddress, serverPort);
         client.start();
+        input.close();
     }
 }
