@@ -22,7 +22,7 @@ Os pacotes de comunicação possuem um tamanho fixo de 1038 bytes e são estrutu
 - **4 bytes:** ACK (número de confirmação)
 - **2 bytes:** rcvWindow (tamanho da janela de recepção, em bytes)
 - **2 bytes:** checksum (soma de verificação)
-- **1026 bytes:** payload (dados da mensagem ou arquivo)
+- **1024 bytes:** payload (dados da mensagem ou arquivo)
 
 **Segurança:**
 
