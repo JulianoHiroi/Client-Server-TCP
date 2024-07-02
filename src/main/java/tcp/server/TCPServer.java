@@ -17,7 +17,6 @@ import tcp.security.MD5Encryption;
 public class TCPServer implements Runnable {
     private DatagramSocket socket;
     private InetAddress address;
-    private int windowSize;
     private int portClient;
     private Scanner input = new Scanner(System.in);
 
@@ -89,14 +88,14 @@ public class TCPServer implements Runnable {
             DatagramPacket packetAck = new DatagramPacket(bufferAck, bufferAck.length);
             PacketReceiver pacote;
 
-            windowSize = 100;
+            int windowSize = 0;
             int lastAck = -1;
             long fileSize = raf.length() / 1024;
-
+            int[] pacotesAcks = new int[(int) fileSize + 1];
             while (lastAck != fileSize) {
                 raf.seek((lastAck + 1) * 1024);
                 seqNumber = lastAck + 1;
-
+                windowSize++;
                 // Envia os pacotes
                 for (int i = 0; i < windowSize; i++) {
                     bytesRead = raf.read(buffer);
@@ -121,15 +120,21 @@ public class TCPServer implements Runnable {
                         acksReceived++;
                         pacote = new PacketReceiver(packetAck);
                         // System.out.println("Ack recebido: " + pacote.getAck());
-                        if (pacote.getAck() > lastAck) {
-                            lastAck = pacote.getAck();
+                        int ack = pacote.getAck();
+                        pacotesAcks[ack]++;
+                        if (pacotesAcks[ack] == 3) {
+                            windowSize = windowSize / 2;
+                            pacotesAcks[ack] = 0;
+                        }
+                        if (ack > lastAck) {
+                            lastAck = ack;
                         }
                     }
                 } catch (IOException e) {
                     socket.setSoTimeout(0);
                 }
                 if (acksReceived == 0) {
-                    socket.setSoTimeout(10000);
+                    socket.setSoTimeout(2000);
                     try {
                         socket.receive(packetAck);
                         pacote = new PacketReceiver(packetAck);
@@ -140,7 +145,7 @@ public class TCPServer implements Runnable {
                     } catch (IOException e) {
                         System.out.println("Timeout - Fechando a conexão");
                         socket.setSoTimeout(0);
-                        raf.close();
+                        windowSize = 1;
                         return;
                     }
                 }
