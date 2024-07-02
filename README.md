@@ -16,13 +16,19 @@ O projeto é estruturado em duas classes principais:
 
 **Estrutura dos pacotes:**
 
-Os pacotes de comunicação possuem um tamanho fixo de 1038 bytes e são estruturados da seguinte forma:
+Os pacotes de comunicação possuem um tamanho fixo de 1034 bytes e são estruturados da seguinte forma:
 
 - **4 bytes:** Sequence Number (número de sequência)
 - **4 bytes:** ACK (número de confirmação)
 - **2 bytes:** rcvWindow (tamanho da janela de recepção, em bytes)
 - **2 bytes:** checksum (soma de verificação)
 - **1024 bytes:** payload (dados da mensagem ou arquivo)
+
+**Funcionalidades implementadas:**
+
+- **Confirmação de recebimento (ACK):** O TCP garante a entrega confiável de dados através do mecanismo de ACK. O cliente envia um ACK para cada pacote recebido pelo servidor, confirmando o recebimento. O servidor, por sua vez, mantém um registro dos pacotes recebidos e retransmite os pacotes não confirmados.
+- **Controle de Congestionamento:** O TCP implementa mecanismos para evitar o congestionamento da rede, evitando o envio de pacotes em excesso que podem sobrecarregar o sistema. Este projeto utiliza o mecanismo de **janela deslizante** para controlar a quantidade de dados enviados antes de receber uma confirmação. O cliente mantém uma janela de pacotes que podem ser enviados simultaneamente, ajustando seu tamanho com base no feedback recebido do servidor.
+- **Ordenação de pacotes:** O TCP garante que os pacotes cheguem na ordem correta, mesmo que sejam recebidos fora de ordem. O projeto implementa mecanismos para detectar e ordenar pacotes recebidos em ordem diferente, garantindo a entrega correta dos dados.
 
 **Segurança:**
 
@@ -35,4 +41,4 @@ A integridade dos dados é garantida utilizando o algoritmo MD5 para a geração
 
 **Conclusão:**
 
-Este projeto é uma ótima maneira de aprender na prática sobre o funcionamento do protocolo TCP e explorar diferentes aspectos da comunicação cliente-servidor. O código demonstra a implementação de um sistema de chat e transferência de arquivos, utilizando threads para multitarefa e mecanismos de segurança para garantir a integridade dos dados.
+Este projeto é uma ótima maneira de aprender na prática sobre o funcionamento do protocolo TCP e explorar diferentes aspectos da comunicação cliente-servidor. O código demonstra a implementação de um sistema de chat e transferência de arquivos, utilizando threads para multitarefa e mecanismos de segurança para garantir a integridade dos dados. Ele também ilustra a implementação de mecanismos importantes do TCP como a confirmação de recebimento, controle de congestionamento e ordenação de pacotes, tornando-o um recurso valioso para o aprendizado de redes de computadores.
